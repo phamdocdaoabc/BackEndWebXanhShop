@@ -73,5 +73,12 @@ public class PaymentServiceImpl implements PaymentService {
         this.paymentRepository.deleteById(paymentId);
     }
 
+    @Override
+    public Boolean isPaymentCompleted(Integer orderId) {
+        return paymentRepository.findPayment_ByOrderId(orderId)
+                .map(payment -> payment.getIsPayed())
+                .orElse(false);
+    }
+
 
 }

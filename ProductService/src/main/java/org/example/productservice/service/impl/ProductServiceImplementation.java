@@ -213,7 +213,8 @@ public class ProductServiceImplementation implements ProductService {
                         product.getProductName(),
                         imageUrl, // Đường dẫn ảnh
                         product.getPrice(),
-                        product.getDiscount()
+                        product.getDiscount(),
+                        product.getCategory().getCategoryName()
                 ));
             }
         }

@@ -26,7 +26,7 @@ public final class OrderItem extends BaseEntity implements Serializable {
     @Column(name = "order_id", nullable = false, updatable = false)
     private Integer orderId;
 
-    @Column(name = "ordered_quantity")
+    @Column(name = "order_quantity")
     private Integer orderedQuantity;
 
     @Column(name = "price")

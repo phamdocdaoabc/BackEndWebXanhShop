@@ -19,13 +19,15 @@ public class ProductResponse implements Serializable {
     private String imageUrl;
     private Double price;
     private float discount;
+    private String categoryName;
 
-    public ProductResponse(Integer productId, String productName, String imageUrl, Double price, float discount) {
+    public ProductResponse(Integer productId, String productName, String imageUrl, Double price, float discount, String categoryName) {
         this.productId = productId;
         this.productName = productName;
         this.imageUrl = imageUrl;
         this.price = price;
         this.discount = discount;
+        this.categoryName = categoryName;
     }
 
 }

@@ -1,5 +1,6 @@
 package org.example.shippingservice.service;
 
+import org.example.shippingservice.domain.dtos.OrderItemsRequest;
 import org.example.shippingservice.domain.entity.OrderItemId;
 import org.example.shippingservice.domain.dtos.OrderItemsDTO;
 
@@ -11,4 +12,6 @@ public interface OrderItemService {
     OrderItemsDTO save(final OrderItemsDTO orderItemDto);
     OrderItemsDTO update(final OrderItemsDTO orderItemDto);
     void deleteById(final OrderItemId orderItemId);
+
+    void addOrderItems(Integer orderId, List<OrderItemsRequest.OrderItems> orderItems);
 }

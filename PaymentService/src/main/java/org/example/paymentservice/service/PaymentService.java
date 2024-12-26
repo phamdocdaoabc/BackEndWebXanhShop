@@ -11,4 +11,5 @@ public interface PaymentService {
     PaymentDTO update(final PaymentDTO paymentDto);
     void deleteById(final Integer paymentId);
 
+    Boolean isPaymentCompleted(Integer orderId);
 }

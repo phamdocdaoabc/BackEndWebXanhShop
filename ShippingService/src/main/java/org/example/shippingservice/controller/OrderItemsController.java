@@ -4,10 +4,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.shippingservice.domain.dtos.OrderItemsRequest;
 import org.example.shippingservice.domain.entity.OrderItemId;
 import org.example.shippingservice.domain.dtos.OrderItemsDTO;
 import org.example.shippingservice.response.DTOCollectionResponse;
 import org.example.shippingservice.service.OrderItemService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,6 +79,17 @@ public class OrderItemsController {
         log.info("*** Boolean, resource; delete orderItem by id *");
         this.orderItemService.deleteById(orderItemId);
         return ResponseEntity.ok(true);
+    }
+
+    // thêm sản phẩm dựa vào oderId
+    @PostMapping("/add")
+    public ResponseEntity<String> addOrderItems(@RequestBody OrderItemsRequest request) {
+        try {
+            orderItemService.addOrderItems(request.getOrderId(), request.getOrderItems());
+            return ResponseEntity.ok("Order items added successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 
 }

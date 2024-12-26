@@ -4,6 +4,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.shippingservice.constant.AppConstant;
+import org.example.shippingservice.domain.dtos.OrderItemsRequest;
+import org.example.shippingservice.domain.entity.OrderItem;
 import org.example.shippingservice.domain.entity.OrderItemId;
 import org.example.shippingservice.domain.dtos.OrderDTO;
 import org.example.shippingservice.domain.dtos.OrderItemsDTO;
@@ -76,6 +78,20 @@ public class OrderItemServiceImpl implements OrderItemService {
     public void deleteById(final OrderItemId orderItemId) {
         log.info("*** Void, service; delete orderItem by id *");
         this.orderItemRepository.deleteById(orderItemId);
+    }
+
+    // Thêm sản phẩm dựa vào oderId đã được tạo
+    @Override
+    @Transactional
+    public void addOrderItems(Integer orderId, List<OrderItemsRequest.OrderItems> orderItems) {
+        for (OrderItemsRequest.OrderItems orderItems1 : orderItems) {
+            OrderItem orderItem = new OrderItem();
+            orderItem.setOrderId(orderId);
+            orderItem.setProductId(orderItems1.getProductId());
+            orderItem.setOrderedQuantity(orderItems1.getQuantity());
+            orderItem.setPrice(orderItems1.getPrice());
+            orderItemRepository.save(orderItem);
+        }
     }
 
 

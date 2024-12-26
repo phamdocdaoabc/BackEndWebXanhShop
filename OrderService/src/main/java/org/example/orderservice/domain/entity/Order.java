@@ -14,6 +14,7 @@ import org.example.orderservice.domain.enums.PaymentMethodEnum;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,7 +38,7 @@ public class Order extends BaseEntity implements Serializable {
     @JsonFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
     @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
     @Column(name = "order_date")
-    private LocalDateTime orderDate;
+    private LocalDate orderDate;
     @Column(name = "order_desc")
     private String orderDesc;
 
@@ -50,6 +51,9 @@ public class Order extends BaseEntity implements Serializable {
     @Column(name = "phone")
     private String phone;
 
+    @Column (name = "order_note")
+    private String orderNote;
+
     @Enumerated(EnumType.STRING) // Lưu giá trị Enum dưới dạng String trong DB (PENDING, CONFIRMED, v.v.)
     @Column(name = "order_status", nullable = false)
     private OderStatusEnum orderStatus;
@@ -59,7 +63,7 @@ public class Order extends BaseEntity implements Serializable {
     private PaymentMethodEnum paymentMethod;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "cart_id")
+    @JoinColumn(name = "cart_id" , referencedColumnName = "cart_id")
     private Cart cart;
 
 }

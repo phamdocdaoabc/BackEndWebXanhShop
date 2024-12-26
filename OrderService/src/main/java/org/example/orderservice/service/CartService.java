@@ -1,7 +1,8 @@
 package org.example.orderservice.service;
 
 import org.example.orderservice.domain.dtos.CartDTO;
-import org.example.orderservice.domain.dtos.CartItemRequest;
+import org.example.orderservice.domain.dtos.cart.CartItemRequest;
+import org.example.orderservice.domain.dtos.cart.CartResponse;
 
 import java.util.List;
 
@@ -15,7 +16,14 @@ public interface CartService {
 
     void deleteById(Integer cartId);
     //Integer getUserIdFromToken(String token);
+
+    // Thêm sản phẩm vào giỏ hàng
     void addItemToCart(Integer userId, CartItemRequest request);
 
+    // lấy thông tin sản phẩm trong giỏ hàng
+    CartResponse getCartByUserId(Integer userId);
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    boolean removeProductFromCart(Integer userId, Integer productId);
 
 }

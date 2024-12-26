@@ -1,4 +1,4 @@
-package org.example.orderservice.domain.dtos;
+package org.example.orderservice.domain.dtos.cart;
 
 public class CartItemRequest {
     private Integer productId;

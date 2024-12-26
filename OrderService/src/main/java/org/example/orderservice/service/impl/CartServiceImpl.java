@@ -4,9 +4,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.orderservice.constant.AppConstant;
-import org.example.orderservice.domain.dtos.CartDTO;
-import org.example.orderservice.domain.dtos.CartItemRequest;
-import org.example.orderservice.domain.dtos.UserDTO;
+import org.example.orderservice.domain.dtos.*;
+import org.example.orderservice.domain.dtos.cart.CartItemRequest;
+import org.example.orderservice.domain.dtos.cart.CartItemResponse;
+import org.example.orderservice.domain.dtos.cart.CartResponse;
+import org.example.orderservice.domain.dtos.cart.ProductResponse;
 import org.example.orderservice.domain.entity.Cart;
 import org.example.orderservice.domain.entity.CartItem;
 import org.example.orderservice.exception.CartNotFoundException;
@@ -15,15 +17,14 @@ import org.example.orderservice.repository.CartItemRepository;
 import org.example.orderservice.repository.CartRepository;
 import org.example.orderservice.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import org.springframework.http.HttpHeaders;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -150,5 +151,72 @@ public class CartServiceImpl implements CartService {
 
         // 4. Lưu lại cartItem
         cartItemRepository.save(cartItem);
+    }
+
+    // Lấy thông tin sản phẩm trong giỏ hàng dựa vào userId
+    @Override
+    public CartResponse getCartByUserId(Integer userId) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Giỏ hàng không tồn tại!"));
+
+        List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cart.getCartId());
+
+        // Lấy danh sách productId từ cartItem
+        List<Integer> productIds = cartItems.stream().map(CartItem::getProductId).collect(Collectors.toList());
+        System.out.println("Danh sách productIds: " + productIds);
+        // Gọi product-service để lấy thông tin chi tiết sản phẩm
+        String productServiceUrl = "http://localhost:9056/product-service/api/products/details";
+        ResponseEntity<List<ProductResponse>> response = restTemplate.exchange(
+                productServiceUrl,
+                HttpMethod.POST,
+                new HttpEntity<>(productIds),
+                new ParameterizedTypeReference<List<ProductResponse>>() {}
+        );
+
+        List<ProductResponse> productDetails = response.getBody();
+
+        // Kết hợp thông tin giỏ hàng và chi tiết sản phẩm
+        List<CartItemResponse> cartItemResponses = cartItems.stream().map(cartItem -> {
+            ProductResponse product = productDetails.stream()
+                    .filter(p -> p.getProductId().equals(cartItem.getProductId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+            return new CartItemResponse(
+                    cartItem.getProductId(),
+                    product.getProductName(),
+                    product.getImageUrl(),
+                    cartItem.getQuantity(),
+                    product.getPrice(),
+                    product.getDiscount(),
+                    product.getCategoryName()
+            );
+        }).collect(Collectors.toList());
+        // Tính tổng giá trị giỏ hàng (totalPrice)
+        double totalPrice = cartItemResponses.stream()
+                .mapToDouble(item -> item.getQuantity() * item.getPrice() * (1 - item.getDiscount() / 100.0))
+                .sum();
+
+        int totalItems = (int) cartItems.stream().map(CartItem::getProductId).distinct().count();
+
+        // Trả về thông tin giỏ hàng
+        return new CartResponse(cart.getCartId(), cartItemResponses, totalItems, totalPrice);
+    }
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    @Override
+    public boolean removeProductFromCart(Integer userId, Integer productId) {
+        // Tìm cartId của người dùng
+        Cart cart = cartRepository.findByUserId(userId) .orElseThrow(() -> new RuntimeException("Giỏ hàng không tồn tại!"));
+        if (cart != null) {
+            // Tìm sản phẩm trong giỏ hàng
+            CartItem cartItem = cartItemRepository.findByCart_CartIdAndProductId(cart.getCartId(), productId)
+                    .orElseThrow(() -> new RuntimeException("Không có sản phẩm phù hợp trong giỏ hàng!"));
+            if (cartItem != null) {
+                // Xóa sản phẩm khỏi giỏ hàng
+                cartItemRepository.delete(cartItem);
+                return true;
+            }
+        }
+        return false;
     }
 }

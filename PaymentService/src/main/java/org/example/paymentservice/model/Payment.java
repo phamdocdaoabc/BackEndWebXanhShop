@@ -18,7 +18,7 @@ public final class Payment extends AbstractMappedEntity implements Serializable 
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id", unique = true, nullable = false, updatable = false)
+    @Column(name = "payments_id", unique = true, nullable = false, updatable = false)
     private Integer paymentId;
 
     @Column(name = "order_id")
@@ -30,5 +30,14 @@ public final class Payment extends AbstractMappedEntity implements Serializable 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")
     private PaymentStatus paymentStatus;
+
+    // Getters và Setters
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
 
 }
