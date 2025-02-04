@@ -13,8 +13,25 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
-    // Tạo phương thức để tìm kiếm đơn hàng theo userId
 
     //List<Order> findByCart_CartId(Integer cartId);
     Page<Order> findByCart_CartId(Integer cartId, Pageable pageable);
+
+    Order findByOrderId(Integer orderId);
+
+    // Count orders with PENDING status
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderStatus = 'PENDING'")
+    long countPendingOrders();
+
+    // Total revenue
+    @Query("SELECT SUM(o.totalCost) FROM Order o WHERE o.orderStatus IN ('DELIVERED', 'CONFIRMED', 'SHIPPED')")
+    Double calculateTotalRevenue();
+
+    // Count orders with DELIVERED status
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderStatus = 'DELIVERED'")
+    long countDeliveredOrders();
+
+    // Count orders with CANCELLED status
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.orderStatus = 'CANCELLED'")
+    long countCancelledOrders();
 }

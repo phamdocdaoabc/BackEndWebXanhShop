@@ -67,17 +67,12 @@ public class ProductServiceImplementation implements ProductService {
     }
 
     @Override
-    public ProductDTO update(Integer productId, ProductDTO productDTO) {
-        log.info("ProductDTO, update the products by using productId");
-        return ProductMapping.map(this.productRepository.save(ProductMapping.map(this.findById(productId))));
-    }
-
-    @Override
     public void deleteById(Integer productId) {
         log.info("ProductDTO, update the products");
         this.productRepository.deleteById(productId);
 
     }
+
     // Lấy danh sách sản phẩm all
     @Override
     public List<ProductDTO> getProductsWithImage() {
@@ -132,6 +127,7 @@ public class ProductServiceImplementation implements ProductService {
 
         return ProductDetailDTO.fromEntity(product, imageUrls, categoryName);
     }
+
     // Kiểm tra sản phẩm hết hàng
     @Override
     public int getProductQuantity(Integer productId) {
@@ -139,6 +135,7 @@ public class ProductServiceImplementation implements ProductService {
                 .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
         return product.getQuantily();
     }
+
     // lấy list sản phẩm với categoryId
     @Override
     public List<ProductDTO> getProductsWithCategoryId(Integer categoryId) {
@@ -214,7 +211,8 @@ public class ProductServiceImplementation implements ProductService {
                         imageUrl, // Đường dẫn ảnh
                         product.getPrice(),
                         product.getDiscount(),
-                        product.getCategory().getCategoryName()
+                        product.getCategory().getCategoryName(),
+                        product.getCreatedAt()
                 ));
             }
         }

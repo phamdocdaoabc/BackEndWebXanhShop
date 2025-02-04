@@ -48,7 +48,7 @@ public final class Credential extends BaseEntity implements Serializable {
 
     @JsonIgnore
     @OneToOne(cascade = CascadeType.PERSIST,fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @JsonIgnore

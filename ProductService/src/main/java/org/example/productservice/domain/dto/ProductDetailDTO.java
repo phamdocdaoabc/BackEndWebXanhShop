@@ -1,5 +1,6 @@
 package org.example.productservice.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.productservice.domain.entity.Product;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -26,6 +28,8 @@ public class ProductDetailDTO implements Serializable {
     private String productType;
     private List<String> imageUrl; // URL của ảnh đại diện
     private String categoryName;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate createdAt;
 
     public static ProductDetailDTO fromEntity(Product product, List<String> imageUrls, String categoryId) {
         ProductDetailDTO dto = new ProductDetailDTO();
@@ -38,6 +42,7 @@ public class ProductDetailDTO implements Serializable {
         dto.setDescription(product.getDescription());
         dto.setImageUrl(imageUrls);
         dto.setCategoryName(categoryId);
+        dto.setCreatedAt(product.getCreatedAt());
         return dto;
     }
 }

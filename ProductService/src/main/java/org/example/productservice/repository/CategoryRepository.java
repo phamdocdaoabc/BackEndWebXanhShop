@@ -1,6 +1,8 @@
 package org.example.productservice.repository;
 
 import org.example.productservice.domain.entity.Category;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,5 +19,16 @@ public interface CategoryRepository extends JpaRepository<Category,Integer> {
     List<Object[]> countProductsByCategory();
 
     Optional<Category> findByCategoryName(String categoryName);
+
+    boolean existsByCategoryName(String categoryName);
+
+    @Query("SELECT c.categoryId, c.categoryName, COUNT(p.productId) " +
+            "FROM Category c " +
+            "LEFT JOIN Product p ON c.categoryId = p.category.categoryId " +
+            "GROUP BY c.categoryId, c.categoryName " +
+            "ORDER BY COUNT(p.productId) DESC")
+    Page<Object[]> countProductsByCategory(Pageable pageable);
+
+
 
 }

@@ -12,7 +12,7 @@ public interface ProductService {
     ProductDTO findById(final Integer productId);
     ProductDTO save(final ProductDTO productDTO);
     ProductDTO update(final ProductDTO productDTO);
-    ProductDTO update(final Integer productId,final ProductDTO productDTO);
+
     void deleteById(final Integer productId);
 
     // Lấy danh sách sản phẩm ALL

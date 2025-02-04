@@ -9,6 +9,7 @@ public enum OderStatusEnum {
     PENDING,       // Đơn hàng đang chờ xử lý
     CONFIRMED,     // Đơn hàng đã được xác nhận
     SHIPPED,       // Đơn hàng đang vận chuyển
+    CONFIRM_DELIVERED,     // Đơn hàng xác nhận đã giao.
     DELIVERED,     // Đơn hàng đã được giao
     CANCELLED;     // Đơn hàng đã bị hủy
 
@@ -23,6 +24,8 @@ public enum OderStatusEnum {
                 return "Đã xác nhận";
             case SHIPPED:
                 return "Đang giao";
+            case CONFIRM_DELIVERED:
+                return "Xác nhận đã giao";
             case DELIVERED:
                 return "Đã giao";
             case CANCELLED:

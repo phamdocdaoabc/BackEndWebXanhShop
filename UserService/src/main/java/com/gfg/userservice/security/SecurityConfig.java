@@ -42,7 +42,12 @@ public class SecurityConfig {
                                 "/api/users/test",
                                 "/api/account/register",
                                 "/api/account/login",
-                                "/api/account/change-password"
+                                "/api/account/change-password",
+                                "/api/users/countUser",
+                                "/api/users/fullName/**",
+                                "/api/users/list",
+                                "/api/credentials/lock/**",
+                                "/api/credentials/unlock/**"
                         ).permitAll() // Các URL được phép truy cập mà không cần xác thực
                         .anyRequest().authenticated() // Các URL khác yêu cầu xác thực
                 )

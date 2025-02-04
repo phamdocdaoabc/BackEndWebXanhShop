@@ -83,4 +83,19 @@ public class CredentialController {
         log.info("*** CredentialDto, resource; update credential with credentialId *");
         return ResponseEntity.ok(this.credentialService.findByUsername(username));
     }
+
+    // API khóa tài khoản
+    @PostMapping("/lock/{credentialId}")
+    public ResponseEntity<String> lockUser(@PathVariable Integer credentialId) {
+        credentialService.lockUserAccount(credentialId);
+        return ResponseEntity.ok("Tài khoản đã bị khóa thành công!");
+    }
+
+    // API mở khóa tài khoản
+    @PostMapping("/unlock/{credentialId}")
+    public ResponseEntity<String> unlockUser(@PathVariable Integer credentialId) {
+        credentialService.unlockUserAccount(credentialId);
+        return ResponseEntity.ok("Tài khoản đã được mở khóa thành công!");
+    }
+
 }

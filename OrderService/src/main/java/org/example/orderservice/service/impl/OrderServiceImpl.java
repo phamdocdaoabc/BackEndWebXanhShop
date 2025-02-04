@@ -7,6 +7,7 @@ import org.example.orderservice.domain.dtos.OrderDTO;
 import org.example.orderservice.domain.dtos.OrderResponse;
 import org.example.orderservice.domain.entity.Cart;
 import org.example.orderservice.domain.entity.Order;
+import org.example.orderservice.domain.enums.OderStatusEnum;
 import org.example.orderservice.exception.CartNotFoundException;
 import org.example.orderservice.exception.OrderNotFoundException;
 import org.example.orderservice.mappers.OrderMapping;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+    @Autowired
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
 
@@ -140,6 +142,38 @@ public class OrderServiceImpl implements OrderService {
                     order.getTotalCost()
             );
         });
+    }
+    // số đơn hàng mới
+    @Override
+    public long getPendingOrderCount() {
+        return orderRepository.countPendingOrders();
+    }
+    // Tổng doanh thu
+    @Override
+    public Double getTotalRevenue() {
+        return orderRepository.calculateTotalRevenue();
+    }
+    // Số đơn hàng thành công
+    @Override
+    public long getDeliveredOrderCount() {
+        return orderRepository.countDeliveredOrders();
+    }
+    // Số đơn hàng hủy
+    @Override
+    public long getCancelledOrderCount() {
+        return orderRepository.countCancelledOrders();
+    }
+
+    @Override
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
+    }
+
+    @Override
+    public void updateOrderStatus(Integer orderId, String newStatus) {
+        Order order = orderRepository.findByOrderId(orderId);
+        order.setOrderStatus(OderStatusEnum.valueOf(newStatus));
+        orderRepository.save(order);
     }
 
 }

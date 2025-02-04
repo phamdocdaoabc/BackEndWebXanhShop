@@ -13,4 +13,7 @@ public interface CredentialService {
     CredentialDTO update(final Integer credentialId, final CredentialDTO credentialDto);
     void deleteById(final Integer credentialId);
     CredentialDTO findByUsername(final String username);
+
+    void lockUserAccount(Integer credentialId);
+    void unlockUserAccount(Integer credentialId);
 }

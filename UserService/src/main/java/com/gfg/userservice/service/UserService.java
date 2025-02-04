@@ -32,4 +32,8 @@ public interface UserService {
 
     void updateUserProfile(String userName, UserDTO userDTO);
 
+    public long getUserCount();
+
+    List<UserDTO> getAllUsers();
+
 }

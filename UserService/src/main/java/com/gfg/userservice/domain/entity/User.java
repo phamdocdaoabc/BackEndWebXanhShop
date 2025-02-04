@@ -36,7 +36,7 @@ public class User extends BaseEntity implements Serializable {
     @Column(name = "sex")
     private String sex;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "LONGBLOB")
     @Lob
     private String imageUrl;
 

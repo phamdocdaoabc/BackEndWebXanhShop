@@ -13,6 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @MappedSuperclass
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,11 +27,11 @@ abstract public class BaseEntity implements Serializable {
     @CreatedDate
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Column(name = "created_at")
-    private Instant createdAt;
+    private LocalDate createdAt;
 
     @LastModifiedDate
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     @Column(name = "updated_at")
-    private Instant updatedAt;
+    private LocalDate updatedAt;
 
 }

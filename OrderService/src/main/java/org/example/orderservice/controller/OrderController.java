@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderAdminDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatusDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.UserFullNameDTO;
 import org.example.orderservice.domain.dtos.OrderDTO;
 import org.example.orderservice.domain.dtos.OrderRequest;
 import org.example.orderservice.domain.dtos.OrderResponse;
@@ -18,13 +21,19 @@ import org.example.orderservice.repository.OrderRepository;
 import org.example.orderservice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -37,6 +46,7 @@ public class OrderController {
     private CartRepository cartRepository;
     @Autowired
     private OrderRepository orderRepository;
+    private final RestTemplate restTemplate;
 
     @PostMapping
     public ResponseEntity<OrderDTO> save(@RequestBody
@@ -126,16 +136,84 @@ public class OrderController {
         }
     }
 
-    // api lấy thông tin đơn hàng của ngời dùng
-    /*@GetMapping("/user/{userId}")
-    public List<OrderResponse> getOrdersByUserId(@PathVariable Integer userId) {
-        return orderService.getOrderDetailsByUserId(userId);
-    }*/
+    // api lấy thông tin đơn hàng của người dùng
     @GetMapping("/user")
     public Page<OrderResponse> getOrderDetailsByUserId(
             @RequestParam("userId") Integer userId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
         return orderService.getOrderDetailsByUserId(userId, page, size);
+    }
+
+    // API Hủy đơn hàng
+    @PutMapping("/cancel/{orderId}")
+    public ResponseEntity<Boolean> cancelOrder(@PathVariable Integer orderId){
+        Order order = orderRepository.findByOrderId(orderId);
+        // nếu còn ở trạng thái chờ xử lý thì hủy được
+        if(order.getOrderStatus() == OderStatusEnum.PENDING){
+            order.setOrderStatus(OderStatusEnum.CANCELLED);
+            orderRepository.save(order);
+            return ResponseEntity.ok(true);
+        }else{
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    // APi Thống kê admin
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getOrderStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("pendingOrders", orderService.getPendingOrderCount());
+        stats.put("totalRevenue", orderService.getTotalRevenue());
+        stats.put("deliveredOrders", orderService.getDeliveredOrderCount());
+        stats.put("cancelledOrders", orderService.getCancelledOrderCount());
+        return ResponseEntity.ok(stats);
+    }
+
+    // API lấy Thông tin đơn hàng admin
+    @GetMapping("order-admin")
+    public  ResponseEntity<Page<OrderAdminDTO>> getAllOrders( @RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "10") int size){
+
+        // Cấu hình phân trang
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Lấy danh sách đơn hàng theo trang
+        Page<Order> ordersPage = orderService.getAllOrders(pageable);
+
+        // Chuyển đổi từng Order sang OrderAdminDTO
+        Page<OrderAdminDTO> responses = ordersPage.map(order -> {
+            // Gọi API UserService để lấy thông tin người dùng
+            String userUrl = "http://localhost:9056/user-service/api/users/fullName/" + order.getCart().getUserId();
+            UserFullNameDTO user = restTemplate.getForObject(userUrl, UserFullNameDTO.class);
+
+            // Gọi API PaymentService để lấy trạng thái thanh toán
+            String paymentUrl = "http://localhost:9056/payment-service/api/payments/" + order.getOrderId() + "/status";
+            Boolean isPayed = restTemplate.getForObject(paymentUrl, Boolean.class);
+
+            // Tạo response
+            return new OrderAdminDTO(
+                    order.getOrderId(),
+                    user != null ? user.getFullName() : "N/A", // Kiểm tra null
+                    order.getPhone(),
+                    order.getOrderDate(),
+                    order.getShippingAddress(),
+                    order.getTotalCost(),
+                    isPayed != null && isPayed ? "Đã thanh toán" : "Chưa thanh toán",
+                    order.getOrderStatus().toString()
+            );
+        });
+        return ResponseEntity.ok(responses);
+    }
+
+    // UPDATE orderStatus (ADMIN)
+    @PutMapping("/update/{orderId}/status")
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Integer orderId, @RequestBody OrderStatusDTO orderStatusDTO) {
+        try {
+            orderService.updateOrderStatus(orderId, orderStatusDTO.getOrderStatus());
+            return ResponseEntity.ok("Trạng thái đơn hàng đã được cập nhật.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cập nhật trạng thái thất bại.");
+        }
     }
 }

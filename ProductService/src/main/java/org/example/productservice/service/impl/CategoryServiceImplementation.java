@@ -9,13 +9,20 @@ import org.example.productservice.mapper.CategoryMapping;
 import org.example.productservice.repository.CategoryRepository;
 import org.example.productservice.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
+
+
 
 import static org.example.productservice.mapper.CategoryMapping.convertToDTO;
 import static org.example.productservice.mapper.CategoryMapping.convertToEntity;
@@ -51,24 +58,16 @@ public class CategoryServiceImplementation implements CategoryService {
 
     }
 
-    public CategoryDTO save(CategoryDTO categoryDTO) {
-        log.info("Saving the category");
-
-        // Convert DTO to Entity
-        Category category = convertToEntity(categoryDTO);
-
-        // If the parent category is provided in the DTO, find it in the database
-        if (categoryDTO.getParentCategoryDTO() != null && categoryDTO.getParentCategoryDTO().getCategoryId() != null) {
-            Category parentCategory = categoryRepository.findById(categoryDTO.getParentCategoryDTO().getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
-            category.setParentCategory(parentCategory);
+    public boolean save(String categoryName) {
+        // Kiểm tra nếu tên thể loại đã tồn tại
+        if (categoryRepository.existsByCategoryName(categoryName)) {
+            return false;
         }
-
-        // Save the category entity
-        Category savedCategory = this.categoryRepository.save(category);
-
-        // Convert the saved entity back to DTO and return
-        return convertToDTO(savedCategory);
+        // Tạo mới thể loại và lưu vào cơ sở dữ liệu
+        Category category = new Category();
+        category.setCategoryName(categoryName);
+        categoryRepository.save(category);
+        return true;
     }
 
     @Override
@@ -77,17 +76,20 @@ public class CategoryServiceImplementation implements CategoryService {
         return CategoryMapping.map(this.categoryRepository.save(CategoryMapping.map(categoryDTO)));
     }
 
+    // cập nhật tên thể loại
     @Override
-    public CategoryDTO update(Integer categoryId, CategoryDTO categoryDTO) {
-        log.info("CategoryDTO, update the category by using categoryId");
-        return CategoryMapping.map(this.categoryRepository.save(CategoryMapping.map(this.findById(categoryId))));
+    public void update(Integer categoryId, CategoryDTO categoryDTO) {
+       Category category = categoryRepository.findById(categoryId)
+               .orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + categoryId));
+
+       category.setCategoryName(categoryDTO.getCategoryName());
+       categoryRepository.save(category);
     }
 
     @Override
     public void deleteById(Integer categoryId) {
         log.info("CategoryDTO, delete the category");
         this.categoryRepository.deleteById(categoryId);
-
     }
 
     // list thể loại và count sản phẩm
@@ -104,4 +106,11 @@ public class CategoryServiceImplementation implements CategoryService {
         }
         return response;
     }
+
+    // list thể loại và count sản phẩm admin có phân trang
+    @Override
+    public Page<Object[]> getCategoryProductCounts(Pageable pageable) {
+        return categoryRepository.countProductsByCategory(pageable);
+    }
+
 }

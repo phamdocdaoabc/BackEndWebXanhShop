@@ -8,6 +8,7 @@ import com.gfg.userservice.domain.dto.account.LoginResponse;
 import com.gfg.userservice.domain.entity.Credential;
 import com.gfg.userservice.domain.entity.User;
 import com.gfg.userservice.domain.enums.RoleBasedAuthority;
+import com.gfg.userservice.exceptions.CredentialNotFoundException;
 import com.gfg.userservice.exceptions.UserObjectNotFoundException;
 import com.gfg.userservice.helperClass.UserMapping;
 import com.gfg.userservice.repository.CredentialRepository;
@@ -18,18 +19,11 @@ import com.gfg.userservice.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.awt.dnd.InvalidDnDOperationException;
-import java.sql.Date;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -294,6 +288,8 @@ public class UserServiceImpl implements UserService {
 // Profile Hiển thị thông tin
     @Override
     public UserDTO getUserProfile(String userName) {
+        Credential credential = credentialRepository.findByUsername(userName)
+                .orElseThrow(()-> new CredentialNotFoundException("Credential not found"));
         User user = userRepository.findByCredentialUsername(userName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
@@ -306,6 +302,7 @@ public class UserServiceImpl implements UserService {
                 .adress(user.getAdress())
                 .birthday(user.getBirthday())
                 .imageUrl(user.getImageUrl()) // Trả về chuỗi Base64 của avatar
+                .role(credential.getRoleBasedAuthority()) // Trả về quyền hạn
                 .build();
     }
 // update profile
@@ -328,6 +325,20 @@ public class UserServiceImpl implements UserService {
 
         // Lưu thông tin đã cập nhật
         userRepository.save(user);
+    }
+
+    @Override
+    public long getUserCount() {
+        return userRepository.countUser();
+    }
+
+    // list user in admin
+    @Override
+    public List<UserDTO> getAllUsers() {
+        List<User> users = userRepository.findAllUsersWithAccountStatus();
+        return users.stream()
+                .map(UserMapping::map)
+                .collect(Collectors.toList());
     }
 
 }

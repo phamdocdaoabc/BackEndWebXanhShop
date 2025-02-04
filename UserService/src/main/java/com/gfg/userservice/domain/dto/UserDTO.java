@@ -3,6 +3,7 @@ package com.gfg.userservice.domain.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.gfg.userservice.domain.enums.RoleBasedAuthority;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,21 +32,18 @@ public class UserDTO implements Serializable {
     private String adress;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date birthday;
-    /*
-    public void setBirthday(Long timestamp) {
-        if (timestamp != null) {
-            this.birthday = new Date(timestamp);
-        }
-    }*/
+    private RoleBasedAuthority role;
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
 
     // Getter và Setter (nếu cần)
     public Date getBirthday() {
         return birthday;
     }
 
-    public void setBirthday(Date birthday) {
-        this.birthday = birthday;
-    }
+
 
 
     @JsonProperty("credential")

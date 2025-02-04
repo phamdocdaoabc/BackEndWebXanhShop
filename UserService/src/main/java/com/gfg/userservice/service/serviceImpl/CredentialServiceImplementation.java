@@ -1,6 +1,7 @@
 package com.gfg.userservice.service.serviceImpl;
 
 import com.gfg.userservice.domain.dto.CredentialDTO;
+import com.gfg.userservice.domain.entity.Credential;
 import com.gfg.userservice.exceptions.CredentialNotFoundException;
 import com.gfg.userservice.exceptions.UserObjectNotFoundException;
 import com.gfg.userservice.helperClass.CredentialMapping;
@@ -100,5 +101,22 @@ public class CredentialServiceImplementation implements CredentialService {
 
         return CredentialMapping.map(this.credentialRepository.findByUsername(username)
                 .orElseThrow(() -> new UserObjectNotFoundException(String.format("#### Credential with username: %s not found! ####", username))));
+    }
+
+    // Khóa tài khoản
+    @Override
+    public void lockUserAccount(Integer credentialId) {
+        Credential credential = credentialRepository.findById(credentialId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại!"));
+        credential.setIsAccountNonLocked(false);
+        credentialRepository.save(credential);
+    }
+    // Mở khóa tài khoản
+    @Override
+    public void unlockUserAccount(Integer credentialId) {
+        Credential credential = credentialRepository.findById(credentialId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại!"));
+        credential.setIsAccountNonLocked(true);
+        credentialRepository.save(credential);
     }
 }
