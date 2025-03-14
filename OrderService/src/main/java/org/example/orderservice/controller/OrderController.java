@@ -5,9 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.orderservice.domain.dtos.OrderAdmin.OrderAdminDTO;
-import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatusDTO;
-import org.example.orderservice.domain.dtos.OrderAdmin.UserFullNameDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.*;
 import org.example.orderservice.domain.dtos.OrderDTO;
 import org.example.orderservice.domain.dtos.OrderRequest;
 import org.example.orderservice.domain.dtos.OrderResponse;
@@ -23,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -184,11 +184,11 @@ public class OrderController {
         // Chuyển đổi từng Order sang OrderAdminDTO
         Page<OrderAdminDTO> responses = ordersPage.map(order -> {
             // Gọi API UserService để lấy thông tin người dùng
-            String userUrl = "http://localhost:9056/user-service/api/users/fullName/" + order.getCart().getUserId();
+            String userUrl = "http://UserService/user-service/api/users/fullName/" + order.getCart().getUserId();
             UserFullNameDTO user = restTemplate.getForObject(userUrl, UserFullNameDTO.class);
 
             // Gọi API PaymentService để lấy trạng thái thanh toán
-            String paymentUrl = "http://localhost:9056/payment-service/api/payments/" + order.getOrderId() + "/status";
+            String paymentUrl = "http://PaymentService/payment-service/api/payments/" + order.getOrderId() + "/status";
             Boolean isPayed = restTemplate.getForObject(paymentUrl, Boolean.class);
 
             // Tạo response
@@ -216,4 +216,42 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cập nhật trạng thái thất bại.");
         }
     }
+
+    // Admin user statistcs
+    @GetMapping("/user_statistics")
+    public ResponseEntity<Page<OrderStatisticsDTO>> getUserStatistics(
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("orderDate").descending());
+        Page<OrderStatisticsDTO> orderStatisticDTOS = orderService.getOrderStatistics(startDate, endDate, pageable);
+        return ResponseEntity.ok(orderStatisticDTOS);
+
+    }
+
+    // Admin year statistcs
+    @GetMapping("/year_statistics")
+    public ResponseEntity<Page<OrderYearlyStatisticDTO>> getOrderYearStatistics(
+            @RequestParam("year") int year,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OrderYearlyStatisticDTO> statistics = orderService.getOrderYearStatistics(year, pageable);
+        return ResponseEntity.ok(statistics);
+    }
+    // Admin month statistcs
+    @GetMapping("/month_statistics")
+    public ResponseEntity<Page<OrderMonthlyStatisticDTO>> getOrderMonthStatistics(
+            @RequestParam("year") int year,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ){
+       Pageable pageable = PageRequest.of(page, size);
+       Page<OrderMonthlyStatisticDTO> statisrics = orderService.getOrderMonthStatistics(year, pageable);
+       return ResponseEntity.ok(statisrics);
+    }
+
 }

@@ -25,4 +25,6 @@ public interface UserRepository extends JpaRepository<User,Integer> {
     @Query("SELECT u FROM User u JOIN FETCH u.credential c")
     List<User> findAllUsersWithAccountStatus();
 
+    List<User> findByUserIdIn(List<Integer> userIds);
+
 }

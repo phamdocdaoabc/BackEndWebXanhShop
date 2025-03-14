@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 public class CartServiceImpl implements CartService {
 
-    @Autowired
-    private CartRepository cartRepository;
+
+    private final CartRepository cartRepository;
     private final RestTemplate restTemplate;
 
     @Override
@@ -165,7 +165,7 @@ public class CartServiceImpl implements CartService {
         List<Integer> productIds = cartItems.stream().map(CartItem::getProductId).collect(Collectors.toList());
         System.out.println("Danh sách productIds: " + productIds);
         // Gọi product-service để lấy thông tin chi tiết sản phẩm
-        String productServiceUrl = "http://localhost:9056/product-service/api/products/details";
+        String productServiceUrl = "http://ProductService/product-service/api/products/details";
         ResponseEntity<List<ProductResponse>> response = restTemplate.exchange(
                 productServiceUrl,
                 HttpMethod.POST,

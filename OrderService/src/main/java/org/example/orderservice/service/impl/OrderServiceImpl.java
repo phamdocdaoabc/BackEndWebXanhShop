@@ -3,6 +3,9 @@ package org.example.orderservice.service.impl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderMonthlyStatisticDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatisticsDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderYearlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderDTO;
 import org.example.orderservice.domain.dtos.OrderResponse;
 import org.example.orderservice.domain.entity.Cart;
@@ -15,14 +18,15 @@ import org.example.orderservice.repository.CartRepository;
 import org.example.orderservice.repository.OrderRepository;
 import org.example.orderservice.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -127,7 +131,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Chuyển đổi từ Order sang OrderResponse
         return ordersPage.map(order -> {
-            String paymentUrl = "http://localhost:9056/payment-service/api/payments/" + order.getOrderId() + "/status";
+            String paymentUrl = "http://PaymentService/payment-service/api/payments/" + order.getOrderId() + "/status";
             Boolean isPayed = restTemplate.getForObject(paymentUrl, Boolean.class);
             System.out.println("isPayed: " + isPayed);
 
@@ -174,6 +178,114 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findByOrderId(orderId);
         order.setOrderStatus(OderStatusEnum.valueOf(newStatus));
         orderRepository.save(order);
+    }
+
+    // Call UserService to get fullName
+    private Map<Integer, String> fetchUserNames(Set<Integer> userIds) {
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String url = "http://UserService/user-service/api/users/full_name?userIds=" + String.join(",", userIds.stream().map(String::valueOf).toArray(String[]::new));
+        try {
+            ResponseEntity<Map<Integer, String>> response = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<Map<Integer, String>>() {});
+            return response.getBody() != null ? response.getBody() : Collections.emptyMap();
+        } catch (Exception e) {
+            return Collections.emptyMap(); // Nếu lỗi thì trả về danh sách rỗng để tránh ảnh hưởng hệ thống
+        }
+    }
+    // Admin User Statistics
+    @Override
+    public Page<OrderStatisticsDTO> getOrderStatistics(LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        // Query list OrderItems by date range
+        Page<Order> orderPage = orderRepository.findByOrderDateBetween(startDate, endDate, pageable);
+        List<Order> orders = orderPage.getContent();
+
+        // Group data by category_Name
+        Map<Integer, OrderStatisticsDTO> statisticDTOMap = new HashMap<>();
+        Set<Integer> userIds = new HashSet<>(); // Tập hợp userId để tránh trùng lặp
+
+        for(Order order : orders){
+            Integer userId = order.getCart().getUserId();
+            userIds.add(userId); // Thêm userId vào danh sách gọi API
+
+            OrderStatisticsDTO stat = statisticDTOMap.getOrDefault(userId, new OrderStatisticsDTO(userId));
+
+            stat.setSoldQuantity(stat.getSoldQuantity() + 1);
+            stat.setRevenue(stat.getRevenue() + order.getTotalCost());
+
+            stat.setMinPrice(Math.min(stat.getMinPrice(), order.getTotalCost()));
+            stat.setMaxPrice(Math.max(stat.getMaxPrice(), order.getTotalCost()));
+
+            statisticDTOMap.put(userId, stat);
+        }
+
+        // **Gọi API một lần để lấy danh sách tên người dùng**
+        Map<Integer, String> userNames = fetchUserNames(userIds);
+
+        // Call api UserService to get fullName
+        for(OrderStatisticsDTO stat : statisticDTOMap.values()){
+            stat.setFullName(userNames.getOrDefault(stat.getUserId(), "Không xác định!"));
+            if(stat.getSoldQuantity() > 0){
+                stat.setAveragePrice(stat.getRevenue() / stat.getSoldQuantity()); // Calculate the average value
+            }
+        }
+
+        // convert list to `Page<CategoryStatisticDTO>`
+        List<OrderStatisticsDTO> orderStatisticDTOS = new ArrayList<>(statisticDTOMap.values());
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), orderStatisticDTOS.size());
+
+        return new PageImpl<>(orderStatisticDTOS.subList(start, end), pageable, orderStatisticDTOS.size());
+    }
+
+    // Admin year statistics - order
+    @Override
+    public Page<OrderYearlyStatisticDTO> getOrderYearStatistics(int year, Pageable pageable) {
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
+
+        List<Order> allOrders = orderRepository.findByOrderDateBetween(startDate, endDate);
+        Page<Order> orderPage = orderRepository.findByOrderDateBetween(startDate, endDate, pageable);
+
+        if (orderPage.isEmpty()) {
+            return Page.empty();
+        }
+
+        long totalOrders = allOrders.size();
+        double totalRevenue = allOrders.stream().mapToDouble(Order::getTotalCost).sum();
+        double minPrice = allOrders.stream().mapToDouble(Order::getTotalCost).min().orElse(0);
+        double maxPrice = allOrders.stream().mapToDouble(Order::getTotalCost).max().orElse(0);
+        double averagePrice = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+        OrderYearlyStatisticDTO statistics = new OrderYearlyStatisticDTO(year, totalOrders, totalRevenue, averagePrice, minPrice, maxPrice);
+
+        return new PageImpl<>(List.of(statistics), pageable, 1);
+    }
+
+    // Admin Month Statistics - order
+    @Override
+    public Page<OrderMonthlyStatisticDTO> getOrderMonthStatistics(int year, Pageable pageable) {
+        List<OrderMonthlyStatisticDTO> statisticsList = new ArrayList<>();
+
+        for (int month = 1; month <= 12; month++) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+            List<Order> monthlyOrder = orderRepository.findByOrderDateBetween(startDate, endDate);
+            long totalOrder = monthlyOrder.size();
+            double totalRevenue = monthlyOrder.stream().mapToDouble(Order::getTotalCost).sum();
+            double averagePrice = totalOrder > 0 ? totalRevenue / totalOrder: 0;
+            double minPrice = monthlyOrder.stream().mapToDouble(Order::getTotalCost).min().orElse(0);
+            double maxPrice = monthlyOrder.stream().mapToDouble(Order::getTotalCost).max().orElse(0);
+
+            OrderMonthlyStatisticDTO statisticDTO = new OrderMonthlyStatisticDTO(month, year, totalOrder, totalRevenue, averagePrice, minPrice, maxPrice);
+            statisticsList.add(statisticDTO);
+        }
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), statisticsList.size());
+        List<OrderMonthlyStatisticDTO> pageList = statisticsList.subList(start, end);
+        return new PageImpl<>(pageList, pageable, statisticsList.size());
     }
 
 }

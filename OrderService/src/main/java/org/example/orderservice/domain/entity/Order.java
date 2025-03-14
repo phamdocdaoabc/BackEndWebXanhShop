@@ -35,10 +35,11 @@ public class Order extends BaseEntity implements Serializable {
 
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT, shape = JsonFormat.Shape.STRING)
-    @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_TIME_FORMAT)
+    @JsonFormat(pattern = AppConstant.LOCAL_DATE_FORMAT, shape = JsonFormat.Shape.STRING)
+    @DateTimeFormat(pattern = AppConstant.LOCAL_DATE_FORMAT)
     @Column(name = "order_date")
     private LocalDate orderDate;
+
     @Column(name = "order_desc")
     private String orderDesc;
 

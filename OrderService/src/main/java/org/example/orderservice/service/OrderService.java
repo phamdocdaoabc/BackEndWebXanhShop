@@ -1,11 +1,15 @@
 package org.example.orderservice.service;
 
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderMonthlyStatisticDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatisticsDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderYearlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderDTO;
 import org.example.orderservice.domain.dtos.OrderResponse;
 import org.example.orderservice.domain.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface OrderService {
@@ -22,12 +26,19 @@ public interface OrderService {
 
     Page<OrderResponse> getOrderDetailsByUserId(Integer userId, int page, int size);
 
-    public long getPendingOrderCount();
-    public Double getTotalRevenue();
-    public long getDeliveredOrderCount();
-    public long getCancelledOrderCount();
+    long getPendingOrderCount();
+    Double getTotalRevenue();
+    long getDeliveredOrderCount();
+    long getCancelledOrderCount();
 
     Page<Order> getAllOrders(Pageable pageable);
 
     void updateOrderStatus(Integer orderId, String newStatus);
+
+    Page<OrderStatisticsDTO> getOrderStatistics(LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+    Page<OrderYearlyStatisticDTO> getOrderYearStatistics(int year, Pageable pageable);
+
+    Page<OrderMonthlyStatisticDTO> getOrderMonthStatistics(int year, Pageable pageable);
+
 }

@@ -25,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -176,6 +177,7 @@ public class UserServiceImpl implements UserService {
         }
         // Tạo User
         User user = new User();
+        user.setFullName(registerRequest.getUser());
         user.setEmail(registerRequest.getEmail());
         // Lưu vào cơ sở dữ liệu
         userRepository.save(user);
@@ -339,6 +341,13 @@ public class UserServiceImpl implements UserService {
         return users.stream()
                 .map(UserMapping::map)
                 .collect(Collectors.toList());
+    }
+
+    // get map userId : fullName
+    @Override
+    public Map<Integer, String> getFullNames(List<Integer> userIds) {
+        List<User> users = userRepository.findByUserIdIn(userIds);
+        return users.stream().collect(Collectors.toMap(User::getUserId, User::getFullName));
     }
 
 }

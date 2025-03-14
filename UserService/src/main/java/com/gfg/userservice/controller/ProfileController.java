@@ -42,5 +42,4 @@ public class ProfileController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Lỗi khi cập nhật thông tin", "status", 400));
         }
     }
-
 }

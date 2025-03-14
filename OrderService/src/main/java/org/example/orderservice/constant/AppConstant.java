@@ -26,8 +26,8 @@ public abstract class AppConstant {
         public static final String FAVOURITE_SERVICE_HOST = "http://FavouriteService/favourite-service";
         public static final String FAVOURITE_SERVICE_API_URL = "http://FavouriteService/favourite-service/api/favourites";
 
-        //  public static final String PAYMENT_SERVICE_HOST = "http://PAYMENT-SERVICE/payment-service";
-        //  public static final String PAYMENT_SERVICE_API_URL = "http://PAYMENT-SERVICE/payment-service/api/payments";
+        public static final String PAYMENT_SERVICE_HOST = "http://PaymentService/payment-service";
+        public static final String PAYMENT_SERVICE_API_URL = "http://PaymentService/payment-service/api/payments";
 
         public static final String SHIPPING_SERVICE_HOST = "http://ShippingService/shipping-service";
         public static final String SHIPPING_SERVICE_API_URL = "http://ShippingService/shipping-service/api/shippings";

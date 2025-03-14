@@ -115,4 +115,10 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/full_name")
+    public ResponseEntity<Map<Integer, String>> getUserFullNames(@RequestParam List<Integer> userIds){
+        Map<Integer, String> fullNames = userService.getFullNames(userIds);
+        return ResponseEntity.ok(fullNames);
+    }
+
 }

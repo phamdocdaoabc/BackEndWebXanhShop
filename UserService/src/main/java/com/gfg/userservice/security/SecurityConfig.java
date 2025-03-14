@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/api/account/change-password",
                                 "/api/users/countUser",
                                 "/api/users/fullName/**",
+                                "/api/users/full_name",
                                 "/api/users/list",
                                 "/api/credentials/lock/**",
                                 "/api/credentials/unlock/**"

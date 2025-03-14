@@ -96,8 +96,7 @@ public class UserControllerTest {
     private UserDTO createUserDTO() {
         return UserDTO.builder()
                 .userId(1)
-                .firstName("Mahesh")
-                .lastName("Kadambala")
+                .fullName("Mahesh")
                 .email("maheshkadambala18@gmail.com")
                 .build();
     }

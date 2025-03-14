@@ -1,12 +1,15 @@
 package org.example.shippingservice.domain.dtos;
 
+import org.example.shippingservice.audit.BaseEntity;
 import org.example.shippingservice.domain.entity.OrderItem;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class OrderItemsRequest {
     private Integer orderId;
     private List<OrderItems> orderItems;
+
 
     public Integer getOrderId() {
         return orderId;
@@ -24,7 +27,8 @@ public class OrderItemsRequest {
         this.orderItems = orderItems;
     }
 
-    public static class OrderItems {
+
+    public static class OrderItems{
         private Integer productId;
         private int quantity;
         private double price;

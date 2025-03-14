@@ -7,6 +7,7 @@ import com.gfg.userservice.domain.dto.account.LoginRequest;
 import com.gfg.userservice.domain.dto.account.LoginResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserService {
 
@@ -35,5 +36,7 @@ public interface UserService {
     public long getUserCount();
 
     List<UserDTO> getAllUsers();
+
+    public Map<Integer, String> getFullNames(List<Integer> userIds);
 
 }

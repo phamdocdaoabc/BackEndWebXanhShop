@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -34,4 +35,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     // Count orders with CANCELLED status
     @Query("SELECT COUNT(o) FROM Order o WHERE o.orderStatus = 'CANCELLED'")
     long countCancelledOrders();
+
+    Page<Order> findByOrderDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
+    List<Order> findByOrderDateBetween(LocalDate startDate, LocalDate endDate);
 }

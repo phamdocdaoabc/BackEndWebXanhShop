@@ -4,16 +4,20 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.shippingservice.domain.dtos.OrderItemsRequest;
-import org.example.shippingservice.domain.dtos.OrderProductResponse;
-import org.example.shippingservice.domain.dtos.ProductResponse;
+import org.example.shippingservice.domain.dtos.*;
+import org.example.shippingservice.domain.dtos.adminStatistics.CategoryStatisticDTO;
+import org.example.shippingservice.domain.dtos.adminStatistics.ProductStatisticDTO;
 import org.example.shippingservice.domain.entity.OrderItem;
 import org.example.shippingservice.domain.entity.OrderItemId;
-import org.example.shippingservice.domain.dtos.OrderItemsDTO;
 import org.example.shippingservice.repository.OrderItemRepository;
 import org.example.shippingservice.response.DTOCollectionResponse;
 import org.example.shippingservice.service.OrderItemService;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -21,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -121,7 +126,7 @@ public class OrderItemsController {
                     .collect(Collectors.toList());
 
             // 3. Gửi danh sách productId đến product-service để lấy thông tin chi tiết
-            String productServiceUrl = "http://localhost:9056/product-service/api/products/details";
+            String productServiceUrl = "http://ProductService/product-service/api/products/details";
             // Sử dụng ParameterizedTypeReference để ánh xạ danh sách trả về
             ResponseEntity<List<ProductResponse>> response = restTemplate.exchange(
                     productServiceUrl,
@@ -159,5 +164,33 @@ public class OrderItemsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy thông tin sản phẩm cho đơn hàng: " + e.getMessage());
         }
     }
+
+    // Product Statistics
+    @GetMapping("/product_statistics")
+    public  ResponseEntity<Page<ProductStatisticDTO>> getProductStatistics(
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+            ){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<ProductStatisticDTO> statisticDTOS = orderItemService.getProductStatistics(startDate, endDate, pageable);
+
+        return ResponseEntity.ok(statisticDTOS);
+    }
+
+    // Category Statistics
+    @GetMapping("/category_statistics")
+    public ResponseEntity<Page<CategoryStatisticDTO>> getCategoryStatistics(
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<CategoryStatisticDTO> categoryStatisticDTOS = orderItemService.getCategoryStatistics(startDate, endDate, pageable);
+        return ResponseEntity.ok(categoryStatisticDTOS);
+    }
+
 }
 
