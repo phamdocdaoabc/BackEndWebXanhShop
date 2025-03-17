@@ -1,6 +1,7 @@
 package org.example.orderservice.service;
 
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderMonthlyStatisticDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderQuarterlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatisticsDTO;
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderYearlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderDTO;
@@ -40,5 +41,7 @@ public interface OrderService {
     Page<OrderYearlyStatisticDTO> getOrderYearStatistics(int year, Pageable pageable);
 
     Page<OrderMonthlyStatisticDTO> getOrderMonthStatistics(int year, Pageable pageable);
+
+    Page<OrderQuarterlyStatisticDTO> getOrderStatisticsByQuarter(int year, Pageable pageable);
 
 }

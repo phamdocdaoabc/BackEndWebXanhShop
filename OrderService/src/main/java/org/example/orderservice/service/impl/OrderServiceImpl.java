@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderMonthlyStatisticDTO;
+import org.example.orderservice.domain.dtos.OrderAdmin.OrderQuarterlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderStatisticsDTO;
 import org.example.orderservice.domain.dtos.OrderAdmin.OrderYearlyStatisticDTO;
 import org.example.orderservice.domain.dtos.OrderDTO;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -286,6 +288,42 @@ public class OrderServiceImpl implements OrderService {
         int end = Math.min((start + pageable.getPageSize()), statisticsList.size());
         List<OrderMonthlyStatisticDTO> pageList = statisticsList.subList(start, end);
         return new PageImpl<>(pageList, pageable, statisticsList.size());
+    }
+
+    @Override
+    public Page<OrderQuarterlyStatisticDTO> getOrderStatisticsByQuarter(int year, Pageable pageable) {
+        List<OrderQuarterlyStatisticDTO> statisticsList = new ArrayList<>();
+
+        int[][] quarters = {
+                {1, 3},   // Q1: Tháng 1 - 3
+                {4, 6},   // Q2: Tháng 4 - 6
+                {7, 9},   // Q3: Tháng 7 - 9
+                {10, 12}  // Q4: Tháng 10 - 12
+        };
+
+        for (int i = 0; i < 4; i++) {
+            LocalDate startDate = LocalDate.of(year, quarters[i][0], 1);
+            LocalDate endDate = YearMonth.of(year, quarters[i][1]).atEndOfMonth();
+
+            List<Order> quarterlyOrders = orderRepository.findByOrderDateBetween(startDate, endDate);
+
+            long totalOrders = quarterlyOrders.size();
+            double totalRevenue = quarterlyOrders.stream().mapToDouble(Order::getTotalCost).sum();
+            double minPrice = quarterlyOrders.stream().mapToDouble(Order::getTotalCost).min().orElse(0);
+            double maxPrice = quarterlyOrders.stream().mapToDouble(Order::getTotalCost).max().orElse(0);
+            double averagePrice = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+            OrderQuarterlyStatisticDTO statistics = new OrderQuarterlyStatisticDTO(i + 1, year, totalOrders, totalRevenue, averagePrice, minPrice, maxPrice);
+            statisticsList.add(statistics);
+        }
+
+        // Áp dụng phân trang
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), statisticsList.size());
+        List<OrderQuarterlyStatisticDTO> pagedList = statisticsList.subList(start, end);
+
+        return new PageImpl<>(pagedList, pageable, statisticsList.size());
+
     }
 
 }

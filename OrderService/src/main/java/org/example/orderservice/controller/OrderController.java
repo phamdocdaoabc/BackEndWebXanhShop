@@ -254,4 +254,16 @@ public class OrderController {
        return ResponseEntity.ok(statisrics);
     }
 
+    //Admin quarter statistics.
+    @GetMapping("/quarter_statistics")
+    public ResponseEntity<Page<OrderQuarterlyStatisticDTO>> getOrderQuarterStatistics(
+            @RequestParam("year") int year,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "4") int size
+    ){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OrderQuarterlyStatisticDTO> statisrics = orderService.getOrderStatisticsByQuarter(year, pageable);
+        return ResponseEntity.ok(statisrics);
+    }
+
 }
